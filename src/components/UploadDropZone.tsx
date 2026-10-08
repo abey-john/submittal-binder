@@ -145,10 +145,10 @@ export const UploadDropZone: React.FC<Props> = ({ onFilesParsed, compact = false
 
           <div className="dropzone-text-group">
             <h3 className="dropzone-heading">
-              {compact ? 'Add More Folders or PDFs' : 'Drag & Drop Submittal Folders or PDFs'}
+              {compact ? 'Add More Submittal Folders or PDFs' : 'Drag & Drop Submittal Folder or PDFs'}
             </h3>
             <p className="dropzone-subheading">
-              Drop top-level folders or loose PDF spec sheets here, or use the pickers below.
+              Drop your entire submittal folder, or select multiple component folders and loose PDFs from File Explorer.
             </p>
           </div>
 
@@ -158,9 +158,10 @@ export const UploadDropZone: React.FC<Props> = ({ onFilesParsed, compact = false
               className="btn-primary"
               onClick={() => folderInputRef.current?.click()}
               id="btn-upload-folder"
+              title="Bulk import your entire submittal folder (with all subfolders and PDFs) in one click"
             >
               <FolderUp size={16} />
-              <span>Select Folder(s)</span>
+              <span>Select Submittal Folder</span>
             </button>
 
             <button
@@ -168,6 +169,7 @@ export const UploadDropZone: React.FC<Props> = ({ onFilesParsed, compact = false
               className="btn-secondary"
               onClick={() => filesInputRef.current?.click()}
               id="btn-upload-files"
+              title="Select one or more loose PDF files"
             >
               <FileUp size={16} />
               <span>Select Loose PDF(s)</span>
@@ -181,7 +183,7 @@ export const UploadDropZone: React.FC<Props> = ({ onFilesParsed, compact = false
                 <span>100% Client-Side • Files never leave your browser</span>
               </div>
               <p className="dropzone-rule-tip">
-                Each folder becomes a numbered Component with generated cover page. Loose PDFs become individual Components.
+                Bulk upload: Select or drop your top-level <code>Submittal</code> folder to automatically create Components for all folders and loose PDFs.
               </p>
             </div>
           )}

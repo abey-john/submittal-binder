@@ -15,6 +15,54 @@ export type ParseFilesResult = {
 };
 
 /**
+ * Normalizes a list of paths by detecting if all files share a common root container folder.
+ * If the common root contains subfolders (or subfolders + loose PDFs), the common root
+ * represents the parent submittal package and should be unwrapped so its children
+ * become top-level components.
+ */
+export function unwrapPackageRoot(
+  fileItems: { file: File; rawPath: string }[]
+): { file: File; normalizedPath: string }[] {
+  if (fileItems.length === 0) return [];
+
+  const prepared = fileItems.map((item) => {
+    const clean = item.rawPath.replace(/\\/g, '/').replace(/^\/+/, '');
+    const parts = clean.split('/').filter(Boolean);
+    return { file: item.file, clean, parts };
+  });
+
+  // Check if every item has at least one directory segment and shares the same root folder
+  const firstSegments = prepared.map((p) => (p.parts.length > 1 ? p.parts[0] : null));
+  const candidateRoot = firstSegments[0];
+  const allShareRoot =
+    Boolean(candidateRoot) &&
+    firstSegments.every((seg) => seg !== null && seg === candidateRoot);
+
+  if (allShareRoot && candidateRoot) {
+    // Check if candidateRoot is a container:
+    // It's a container if ANY path has depth >= 3 (e.g. Submittal/Folder1/file1.pdf)
+    // OR if there are multiple sub-entities inside it.
+    const hasSubfoldersInside = prepared.some((p) => p.parts.length >= 3);
+    const hasLooseFilesInRoot = prepared.some(
+      (p) => p.parts.length === 2 && p.parts[1].toLowerCase().endsWith('.pdf')
+    );
+
+    if (hasSubfoldersInside || (hasSubfoldersInside && hasLooseFilesInRoot)) {
+      // Strip candidateRoot prefix from all paths
+      return prepared.map((p) => ({
+        file: p.file,
+        normalizedPath: p.parts.slice(1).join('/'),
+      }));
+    }
+  }
+
+  return prepared.map((p) => ({
+    file: p.file,
+    normalizedPath: p.clean,
+  }));
+}
+
+/**
  * Parses files from folder upload input or drop zone.
  * Follows rules:
  * - Each top-level folder becomes a component, with its direct PDF children as fixtures.
@@ -30,6 +78,14 @@ export async function parseUploadedFiles(
   const warnings: string[] = [];
   const fileMap = new Map<string, File>();
 
+  const rawItems = files.map((file) => ({
+    file,
+    rawPath: relativePathMap?.get(file) || file.webkitRelativePath || file.name,
+  }));
+
+  // Unwrap common package root folder if a parent submittal folder was picked
+  const items = unwrapPackageRoot(rawItems);
+
   // Map folderName -> list of direct PDF files
   const folderDirectPdfs = new Map<string, { filename: string; path: string; file: File }[]>();
   // Loose PDF files
@@ -37,11 +93,8 @@ export async function parseUploadedFiles(
 
   const seenNestedSubfolders = new Set<string>();
 
-  for (const file of files) {
-    const rawPath = relativePathMap?.get(file) || file.webkitRelativePath || file.name;
-    // Normalize path separators to forward slashes
-    const normalizedPath = rawPath.replace(/\\/g, '/').replace(/^\/+/, '');
-    const parts = normalizedPath.split('/').filter(Boolean);
+  for (const item of items) {
+    const parts = item.normalizedPath.split('/').filter(Boolean);
 
     // If loose file (no folder in path)
     if (parts.length === 1) {
@@ -49,7 +102,7 @@ export async function parseUploadedFiles(
         loosePdfs.push({
           filename: parts[0],
           path: parts[0],
-          file,
+          file: item.file,
         });
       }
       continue;
@@ -63,7 +116,9 @@ export async function parseUploadedFiles(
       const subfolderKey = `${topLevelFolder}/${parts.slice(1, -1).join('/')}`;
       if (!seenNestedSubfolders.has(subfolderKey)) {
         seenNestedSubfolders.add(subfolderKey);
-        warnings.push(`Nested subfolder "${subfolderKey}" was ignored. Binder only includes direct PDF files of top-level folders.`);
+        warnings.push(
+          `Nested subfolder "${subfolderKey}" was ignored. Binder only includes direct PDF files of top-level folders.`
+        );
       }
       continue;
     }
@@ -77,7 +132,7 @@ export async function parseUploadedFiles(
       folderDirectPdfs.get(topLevelFolder)!.push({
         filename,
         path: `${topLevelFolder}/${filename}`,
-        file,
+        file: item.file,
       });
     }
   }
@@ -93,12 +148,12 @@ export async function parseUploadedFiles(
     // Natural sort fixtures within folder
     pdfItems.sort((a, b) => naturalCompare(a.filename, b.filename));
 
-    const fixtures: Fixture[] = pdfItems.map((item) => {
+    const fixtures: Fixture[] = pdfItems.map((pdfItem) => {
       const fixtureId = generateId();
-      fileMap.set(fixtureId, item.file);
+      fileMap.set(fixtureId, pdfItem.file);
       return {
         id: fixtureId,
-        path: item.path,
+        path: pdfItem.path,
       };
     });
 
@@ -111,18 +166,18 @@ export async function parseUploadedFiles(
 
   // 2. Process loose PDFs (each becomes its own component)
   loosePdfs.sort((a, b) => naturalCompare(a.filename, b.filename));
-  for (const item of loosePdfs) {
+  for (const looseItem of loosePdfs) {
     const fixtureId = generateId();
-    fileMap.set(fixtureId, item.file);
+    fileMap.set(fixtureId, looseItem.file);
 
-    const sourceName = item.filename.replace(/\.pdf$/i, '');
+    const sourceName = looseItem.filename.replace(/\.pdf$/i, '');
     components.push({
       id: generateId(),
       sourceName,
       fixtures: [
         {
           id: fixtureId,
-          path: item.path,
+          path: looseItem.path,
         },
       ],
     });
