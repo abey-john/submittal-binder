@@ -31,7 +31,7 @@ This document records key decisions made where the project prompt was silent or 
     - `Component Name`: 180 pt (Left-aligned, wrapped)
     - `Submitted in this Package`: 90 pt (Centered "Yes")
     - `Where Previously Approved`: 140 pt (Left-aligned, wrapped)
-    - `Status Code (By Reviewer)`: 90 pt (Blank cell with borders)
+    - `Status Code (By Reviewer)`: 90 pt (Pale transparent blue cells for reviewer entry, standard grey header)
   - Real table borders (`borderWidth: 0.75 pt`) are drawn, and header rows repeat on every TOC page.
   - Reviewer Status Codes legend rendered below the table on the final TOC page:
     - *Status Codes:*

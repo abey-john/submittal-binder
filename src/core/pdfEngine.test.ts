@@ -235,5 +235,18 @@ describe('pdfEngine: Covers, TOC, and Stamping', () => {
     expect(decodedTexts).toContain('RR \u2013 Revise and Resubmit');
     expect(decodedTexts).toContain('R \u2013 Rejected');
     expect(decodedTexts).toContain('V \u2013 Void');
+
+    // Verify pale transparent blue fill and opacity are rendered for status code column
+    const fullStreamText = matches
+      .map((m) => {
+        try {
+          return inflateSync(Buffer.from(m[1], 'binary')).toString('latin1');
+        } catch {
+          return '';
+        }
+      })
+      .join('\n');
+    expect(fullStreamText).toContain('0.65 0.8 0.95 rg');
+    expect(fullStreamText).toContain('/ca 0.35');
   });
 });

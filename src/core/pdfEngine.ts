@@ -210,6 +210,29 @@ export async function drawTocPages(
 
     currentY = headerBottom;
 
+    // Fill Status Code column data area with pale transparent blue (not the header)
+    const statusCodeColIdx = columns.findIndex((c) =>
+      c.title.toLowerCase().includes('status code')
+    );
+    const rowsHeight = tocPage.rows.reduce((sum, r) => sum + r.estimatedHeight, 0);
+    if (rowsHeight > 0 && statusCodeColIdx >= 0) {
+      const statusCodeColX =
+        margin +
+        columns
+          .slice(0, statusCodeColIdx)
+          .reduce((sum, col) => sum + col.width, 0);
+      const statusCodeColWidth = columns[statusCodeColIdx].width;
+
+      page.drawRectangle({
+        x: statusCodeColX,
+        y: headerBottom - rowsHeight,
+        width: statusCodeColWidth,
+        height: rowsHeight,
+        color: rgb(0.65, 0.8, 0.95),
+        opacity: 0.35,
+      });
+    }
+
     // Draw Data Rows
     for (const row of tocPage.rows) {
       const rowHeight = row.estimatedHeight;
