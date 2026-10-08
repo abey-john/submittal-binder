@@ -103,6 +103,14 @@ export async function drawComponentCover(
   return doc;
 }
 
+export const TOC_STATUS_CODES = [
+  'A \u2013 Approved',
+  'AN \u2013 Approved as Noted',
+  'RR \u2013 Revise and Resubmit',
+  'R \u2013 Rejected',
+  'V \u2013 Void',
+] as const;
+
 /**
  * Draws Table of Contents pages matching pure paginateToc output.
  * Exact table with real lines, wrapped cells, and repeated headers on every page.
@@ -114,6 +122,7 @@ export async function drawTocPages(
   const doc = await PDFDocument.create();
   const fontRegular = await doc.embedFont(StandardFonts.Helvetica);
   const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+  const fontBoldOblique = await doc.embedFont(StandardFonts.HelveticaBoldOblique);
 
   const pageWidth = options?.pageWidth ?? 612;
   const pageHeight = options?.pageHeight ?? 792;
@@ -268,6 +277,32 @@ export async function drawTocPages(
       }
 
       currentY = rowBottom;
+    }
+
+    // Draw Status Codes section below the Table of Contents table on the final page
+    if (pageIdx === tocPages.length - 1) {
+      const legendGap = 18;
+      const legendTitleY = currentY - legendGap;
+
+      page.drawText('Status Codes:', {
+        x: margin,
+        y: legendTitleY,
+        size: 9,
+        font: fontBoldOblique,
+        color: rgb(0.2, 0.25, 0.35),
+      });
+
+      let codeY = legendTitleY - 14;
+      for (const statusCodeLine of TOC_STATUS_CODES) {
+        page.drawText(statusCodeLine, {
+          x: margin,
+          y: codeY,
+          size: 8.5,
+          font: fontRegular,
+          color: rgb(0.25, 0.3, 0.38),
+        });
+        codeY -= 12;
+      }
     }
   }
 

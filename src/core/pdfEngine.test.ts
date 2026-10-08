@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { inflateSync } from 'node:zlib';
 import { PDFDocument, PDFName, degrees } from 'pdf-lib';
 import {
   addOutline,
@@ -7,6 +8,7 @@ import {
   drawComponentCover,
   drawTocPages,
   stampPageNumbers,
+  TOC_STATUS_CODES,
 } from './pdfEngine';
 import { computeLayout, paginateToc } from './layout';
 import type { Component, Project } from './types';
@@ -188,5 +190,50 @@ describe('pdfEngine: Covers, TOC, and Stamping', () => {
     const childRef = secondItem.get(PDFName.of('First'));
     const childItem = finalDoc.context.lookup(childRef) as any;
     expect(childItem.get(PDFName.of('Title')).decodeText()).toBe('item1');
+  });
+
+  it('renders Status Codes legend below the table of contents', async () => {
+    const sampleComponents: Component[] = [
+      {
+        id: 'c1',
+        sourceName: 'ValveSpecs.pdf',
+        fixtures: [],
+      },
+    ];
+
+    const tocPages = paginateToc(sampleComponents);
+    const tocDoc = await drawTocPages(tocPages);
+
+    expect(tocDoc.getPageCount()).toBe(1);
+    expect(TOC_STATUS_CODES).toEqual([
+      'A \u2013 Approved',
+      'AN \u2013 Approved as Noted',
+      'RR \u2013 Revise and Resubmit',
+      'R \u2013 Rejected',
+      'V \u2013 Void',
+    ]);
+
+    const bytes = await tocDoc.save();
+    const matches = [...Buffer.from(bytes).toString('binary').matchAll(/stream\r?\n([\s\S]*?)\r?\nendstream/g)];
+    const decodedTexts: string[] = [];
+    for (const m of matches) {
+      try {
+        const decompressed = inflateSync(Buffer.from(m[1], 'binary')).toString('latin1');
+        const hexMatches = [...decompressed.matchAll(/<([0-9A-Fa-f]+)>\s*Tj/g)];
+        for (const h of hexMatches) {
+          const raw = Buffer.from(h[1], 'hex').toString('latin1');
+          decodedTexts.push(raw.replace(/\x96/g, '\u2013'));
+        }
+      } catch {
+        // ignore non-flate stream
+      }
+    }
+
+    expect(decodedTexts).toContain('Status Codes:');
+    expect(decodedTexts).toContain('A \u2013 Approved');
+    expect(decodedTexts).toContain('AN \u2013 Approved as Noted');
+    expect(decodedTexts).toContain('RR \u2013 Revise and Resubmit');
+    expect(decodedTexts).toContain('R \u2013 Rejected');
+    expect(decodedTexts).toContain('V \u2013 Void');
   });
 });

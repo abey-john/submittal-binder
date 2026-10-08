@@ -33,7 +33,15 @@ This document records key decisions made where the project prompt was silent or 
     - `Where Previously Approved`: 140 pt (Left-aligned, wrapped)
     - `Status Code (By Reviewer)`: 90 pt (Blank cell with borders)
   - Real table borders (`borderWidth: 0.75 pt`) are drawn, and header rows repeat on every TOC page.
-* **Rationale**: Complete consistency between the layout calculation and the rendered PDF output.
+  - Reviewer Status Codes legend rendered below the table on the final TOC page:
+    - *Status Codes:*
+    - `A` – Approved
+    - `AN` – Approved as Noted
+    - `RR` – Revise and Resubmit
+    - `R` – Rejected
+    - `V` – Void
+  - `paginateToc` reserves space (`legendHeight = 90 pt`) on the final TOC page to guarantee zero page-overflow discrepancies.
+* **Rationale**: Complete consistency between the layout calculation and the rendered PDF output, giving reviewers the exact specification keys for column 5.
 
 ---
 

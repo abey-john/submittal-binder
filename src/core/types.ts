@@ -59,6 +59,7 @@ export type TocLayoutOptions = {
   headerRowHeight?: number; // default 28 pt
   baseRowHeight?: number; // default 24 pt
   lineHeight?: number; // default 14 pt
+  legendHeight?: number; // default 90 pt
   maxRowsPerPageFirstPage?: number; // optional manual override
   maxRowsPerPageSubsequent?: number; // optional manual override
 };

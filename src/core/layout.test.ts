@@ -244,4 +244,22 @@ describe('computeLayout and layout engine', () => {
       expect(line.length).toBeLessThanOrEqual(30); // reasonable word boundary
     }
   });
+
+  it('reserves space for Status Codes legend on final TOC page', () => {
+    // 25 components with standard height (24 pt each) = 600 pt
+    // firstPageUsableHeight = 792 - 72 - 50 - 28 = 642 pt
+    // Without legend: 25 * 24 = 600 <= 642 pt -> fits on 1 page
+    // With legend (90 pt): 600 + 90 = 690 > 642 pt -> spills to page 2
+    const components: Component[] = Array.from({ length: 25 }, (_, i) => ({
+      id: `c_${i + 1}`,
+      sourceName: `Comp ${i + 1}`,
+      fixtures: [],
+    }));
+
+    const pagesWithLegend = paginateToc(components);
+    expect(pagesWithLegend.length).toBe(2);
+
+    const pagesWithoutLegend = paginateToc(components, { legendHeight: 0 });
+    expect(pagesWithoutLegend.length).toBe(1);
+  });
 });

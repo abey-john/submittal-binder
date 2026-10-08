@@ -76,6 +76,7 @@ export function paginateToc(
   const margin = options?.margin ?? 36;
   const titleHeight = options?.titleHeight ?? 50;
   const headerRowHeight = options?.headerRowHeight ?? 28;
+  const legendHeight = options?.legendHeight ?? 90;
 
   const firstPageUsableHeight = pageHeight - margin * 2 - titleHeight - headerRowHeight;
   const subsequentUsableHeight = pageHeight - margin * 2 - headerRowHeight;
@@ -107,9 +108,11 @@ export function paginateToc(
     };
 
     const maxAllowedHeight = isFirstPage ? firstPageUsableHeight : subsequentUsableHeight;
+    const isLastComponent = i === components.length - 1;
+    const requiredHeight = isLastComponent ? rowHeight + legendHeight : rowHeight;
 
     // Check if adding this row exceeds page capacity (and page already has at least one row)
-    if (currentPageRows.length > 0 && currentPageHeight + rowHeight > maxAllowedHeight) {
+    if (currentPageRows.length > 0 && currentPageHeight + requiredHeight > maxAllowedHeight) {
       pages.push({
         pageIndex: pages.length,
         rows: currentPageRows,
