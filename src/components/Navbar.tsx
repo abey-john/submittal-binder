@@ -6,7 +6,6 @@ import {
   FileDown,
   Upload,
   Sparkles,
-  ShieldCheck,
   RotateCcw,
   AlertCircle,
 } from 'lucide-react';
@@ -64,12 +63,6 @@ export const Navbar: React.FC<Props> = ({
             <h1 className="brand-title">Binder</h1>
             <p className="brand-tagline">Submittal Package Builder</p>
           </div>
-        </div>
-
-        {/* Privacy Pill */}
-        <div className="privacy-badge-header" title="Everything runs locally in your browser. No files are uploaded to any server.">
-          <ShieldCheck size={14} className="privacy-badge-icon" />
-          <span>100% Client-Side • Zero Uploads</span>
         </div>
 
         {/* Primary Action Buttons */}

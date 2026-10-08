@@ -117,19 +117,6 @@ body {
   color: var(--text-muted);
 }
 
-.privacy-badge-header {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  color: #34d399;
-  font-size: 11px;
-  font-weight: 500;
-  padding: 4px 10px;
-  border-radius: var(--radius-full);
-}
-
 .header-actions {
   display: flex;
   align-items: center;
@@ -1092,19 +1079,6 @@ button {
   gap: 20px;
 }
 
-.welcome-hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(56, 189, 248, 0.1);
-  border: 1px solid rgba(56, 189, 248, 0.25);
-  color: var(--accent-cyan);
-  font-size: 12px;
-  font-weight: 600;
-  padding: 5px 14px;
-  border-radius: var(--radius-full);
-}
-
 .welcome-hero-title {
   font-size: 32px;
   font-weight: 800;
@@ -1121,49 +1095,6 @@ button {
   color: var(--text-secondary);
   max-width: 620px;
   line-height: 1.6;
-}
-
-.hero-features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px;
-  width: 100%;
-  margin-top: 24px;
-}
-
-.hero-feature-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  transition: all 0.2s ease;
-}
-
-.hero-feature-card:hover {
-  border-color: var(--border-strong);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.feature-icon {
-  color: var(--accent-cyan);
-  margin-bottom: 4px;
-}
-
-.hero-feature-card h4 {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.hero-feature-card p {
-  font-size: 12px;
-  color: var(--text-muted);
-  line-height: 1.5;
 }
 
 .upload-drawer {

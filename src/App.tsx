@@ -8,7 +8,6 @@ import { ArrangeScreen } from './components/ArrangeScreen';
 import { BuildProgressModal, type BuildStatus } from './components/BuildProgressModal';
 import { ProjectRelinkModal } from './components/ProjectRelinkModal';
 import type { WorkerOutMessage } from './core/buildWorker';
-import { FolderDown, ShieldAlert, Sparkles, BookOpen } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [state, dispatch] = useReducer(projectReducer, initialProjectState);
@@ -289,10 +288,6 @@ export const App: React.FC = () => {
         {/* If no components are loaded, show welcome hero + main upload dropzone */}
         {!hasComponents ? (
           <div className="welcome-hero-container">
-            <div className="welcome-hero-badge">
-              <Sparkles size={14} />
-              <span>Browser-Only Construction Submittal Package Tool</span>
-            </div>
             <h2 className="welcome-hero-title">Assemble Professional Submittals in Seconds</h2>
             <p className="welcome-hero-desc">
               Drop your product cut sheets and drawings below. Binder automatically renumbers components,
@@ -314,24 +309,6 @@ export const App: React.FC = () => {
                 }
               }}
             />
-
-            <div className="hero-features-grid">
-              <div className="hero-feature-card">
-                <BookOpen size={20} className="feature-icon" />
-                <h4>Derived Renumbering</h4>
-                <p>No numbers are ever typed or stored. Component numbers update automatically when you drag.</p>
-              </div>
-              <div className="hero-feature-card">
-                <FolderDown size={20} className="feature-icon" />
-                <h4>Automated Covers & TOC</h4>
-                <p>Generates crisp Letter covers for each component and an exact multi-page Table of Contents table.</p>
-              </div>
-              <div className="hero-feature-card">
-                <ShieldAlert size={20} className="feature-icon" />
-                <h4>100% Client-Side Privacy</h4>
-                <p>Zero cloud uploads. All parsing, rendering, and PDF merging happen strictly inside your browser.</p>
-              </div>
-            </div>
           </div>
         ) : (
           <>
