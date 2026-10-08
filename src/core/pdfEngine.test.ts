@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { PDFDocument, degrees } from 'pdf-lib';
+import { PDFDocument, PDFName, degrees } from 'pdf-lib';
 import {
+  addOutline,
+  buildProjectOutlines,
   defaultStampConfig,
   drawComponentCover,
   drawTocPages,
   stampPageNumbers,
 } from './pdfEngine';
-import { paginateToc } from './layout';
-import type { Component } from './types';
+import { computeLayout, paginateToc } from './layout';
+import type { Component, Project } from './types';
 
 describe('pdfEngine: Covers, TOC, and Stamping', () => {
   it('generates a valid 1-page Letter component cover', async () => {
@@ -130,11 +132,61 @@ describe('pdfEngine: Covers, TOC, and Stamping', () => {
     // Total pages: 1 (TOC) + 1 (Cover 1) + 2 (A) + 1 (Cover 2) + 1 (B) = 6 pages
     expect(mergedDoc.getPageCount()).toBe(6);
 
-    // Stamp continuous page numbers
-    await stampPageNumbers(mergedDoc, defaultStampConfig);
+    // Build bookmarks outline tree
+    const testProject: Project = {
+      version: 1,
+      components: [
+        {
+          id: 'c1',
+          sourceName: 'Source A',
+          fixtures: [{ id: 'f1', path: 'folderA/item1.pdf' }],
+        },
+        {
+          id: 'c2',
+          sourceName: 'Source B',
+          fixtures: [{ id: 'f2', path: 'item2.pdf' }],
+        },
+      ],
+    };
+
+    const testLayout = computeLayout(testProject, { f1: 2, f2: 1 });
+    const outlineItems = buildProjectOutlines(testProject, testLayout);
+
+    // Verify hierarchical outline items structure
+    expect(outlineItems.length).toBe(3); // TOC, Component 1, Component 2
+    expect(outlineItems[0].title).toBe('Table of Contents');
+    expect(outlineItems[1].title).toBe('Component 1: Source A');
+    expect(outlineItems[1].children?.[0].title).toBe('item1'); // .pdf stripped
+    expect(outlineItems[2].title).toBe('Component 2: Source B');
+    expect(outlineItems[2].children?.[0].title).toBe('item2');
+
+    // Add outlines to document
+    await addOutline(mergedDoc, outlineItems);
 
     const finalBytes = await mergedDoc.save();
     const finalDoc = await PDFDocument.load(finalBytes);
     expect(finalDoc.getPageCount()).toBe(6);
+
+    // Assert low-level outline dictionary exists in PDF catalog
+    expect(finalDoc.catalog.has(PDFName.of('Outlines'))).toBe(true);
+
+    const outlinesRef = finalDoc.catalog.get(PDFName.of('Outlines'));
+    const outlinesDict = finalDoc.context.lookup(outlinesRef) as any;
+    expect(outlinesDict).toBeDefined();
+
+    // Verify first item is Table of Contents
+    const firstRef = outlinesDict.get(PDFName.of('First'));
+    const firstItem = finalDoc.context.lookup(firstRef) as any;
+    expect(firstItem.get(PDFName.of('Title')).decodeText()).toBe('Table of Contents');
+
+    // Next item is Component 1
+    const secondRef = firstItem.get(PDFName.of('Next'));
+    const secondItem = finalDoc.context.lookup(secondRef) as any;
+    expect(secondItem.get(PDFName.of('Title')).decodeText()).toBe('Component 1: Source A');
+
+    // Component 1 has child 'item1'
+    const childRef = secondItem.get(PDFName.of('First'));
+    const childItem = finalDoc.context.lookup(childRef) as any;
+    expect(childItem.get(PDFName.of('Title')).decodeText()).toBe('item1');
   });
 });

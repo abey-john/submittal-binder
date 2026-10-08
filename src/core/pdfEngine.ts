@@ -1,14 +1,21 @@
 import {
   degrees,
   PDFDocument,
+  PDFHexString,
+  PDFName,
+  type PDFRef,
   rgb,
   StandardFonts,
 } from 'pdf-lib';
-import type {
-  OutlineItem,
-  PageNumberStampConfig,
-  TocLayoutOptions,
-  TocPage,
+import {
+  getComponentDisplayName,
+  getFixtureTitle,
+  type OutlineItem,
+  type PageNumberStampConfig,
+  type TocLayoutOptions,
+  type TocPage,
+  type Project,
+  type LayoutResult,
 } from './types';
 import { wrapTextToLines } from './layout';
 
@@ -339,13 +346,125 @@ export async function stampPageNumbers(
 }
 
 /**
- * Stub outline bookmark generator (to be completed in Milestone 5)
+ * Builds hierarchical outline bookmark tree structure for the submittal package.
+ * Hierarchy: Component -> Fixture (fixture title = filename without .pdf)
+ */
+export function buildProjectOutlines(
+  project: Project,
+  layout: LayoutResult,
+  options?: { submittalCoverPageCount?: number }
+): OutlineItem[] {
+  const outlines: OutlineItem[] = [];
+  const submittalCoverPageCount = options?.submittalCoverPageCount ?? 0;
+
+  if (submittalCoverPageCount > 0) {
+    outlines.push({
+      title: 'Submittal Cover',
+      pageNumber: 1,
+    });
+  }
+
+  outlines.push({
+    title: 'Table of Contents',
+    pageNumber: submittalCoverPageCount + 1,
+  });
+
+  for (let i = 0; i < project.components.length; i++) {
+    const comp = project.components[i];
+    const compNum = layout.componentNumbers[comp.id] ?? (i + 1);
+    const compName = getComponentDisplayName(comp);
+    const coverPage = layout.coverPages[comp.id] ?? 1;
+
+    const fixtureOutlines: OutlineItem[] = comp.fixtures.map((fixture) => ({
+      title: getFixtureTitle(fixture.path),
+      pageNumber: layout.startPages[fixture.id] ?? (coverPage + 1),
+    }));
+
+    outlines.push({
+      title: `Component ${compNum}: ${compName}`,
+      pageNumber: coverPage,
+      children: fixtureOutlines.length > 0 ? fixtureOutlines : undefined,
+    });
+  }
+
+  return outlines;
+}
+
+/**
+ * Builds the PDF /Outlines dictionary tree from low-level objects.
+ * Sets /Parent, /First, /Last, /Prev, /Next, /Title, /Dest on PDF objects.
  */
 export async function addOutline(
-  _doc: PDFDocument,
-  _outline: OutlineItem[]
+  doc: PDFDocument,
+  outlineItems: OutlineItem[]
 ): Promise<void> {
-  // Milestone 5 bookmarks implementation
+  if (outlineItems.length === 0) return;
+
+  const ctx = doc.context;
+  const pageCount = doc.getPageCount();
+
+  const outlinesRef = ctx.nextRef();
+  let totalVisibleItems = 0;
+
+  function buildLevel(
+    items: OutlineItem[],
+    parentRef: PDFRef
+  ): { firstRef: PDFRef; lastRef: PDFRef; count: number } {
+    const itemRefs = items.map(() => ctx.nextRef());
+    let levelVisibleCount = items.length;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const itemRef = itemRefs[i];
+
+      // Safe 1-based to 0-based page index clamping
+      const targetPageIndex = Math.max(0, Math.min(pageCount - 1, item.pageNumber - 1));
+      const targetPage = doc.getPage(targetPageIndex);
+      const destArray = ctx.obj([targetPage.ref, 'Fit']);
+
+      const itemDictEntries: Record<string, any> = {
+        Title: PDFHexString.fromText(item.title),
+        Parent: parentRef,
+        Dest: destArray,
+      };
+
+      if (i > 0) {
+        itemDictEntries['Prev'] = itemRefs[i - 1];
+      }
+      if (i < items.length - 1) {
+        itemDictEntries['Next'] = itemRefs[i + 1];
+      }
+
+      if (item.children && item.children.length > 0) {
+        const childLevel = buildLevel(item.children, itemRef);
+        itemDictEntries['First'] = childLevel.firstRef;
+        itemDictEntries['Last'] = childLevel.lastRef;
+        itemDictEntries['Count'] = childLevel.count; // Open state
+        levelVisibleCount += childLevel.count;
+      }
+
+      ctx.assign(itemRef, ctx.obj(itemDictEntries));
+    }
+
+    return {
+      firstRef: itemRefs[0],
+      lastRef: itemRefs[itemRefs.length - 1],
+      count: levelVisibleCount,
+    };
+  }
+
+  const rootLevel = buildLevel(outlineItems, outlinesRef);
+  totalVisibleItems = rootLevel.count;
+
+  const outlinesDict = ctx.obj({
+    Type: 'Outlines',
+    First: rootLevel.firstRef,
+    Last: rootLevel.lastRef,
+    Count: totalVisibleItems,
+  });
+
+  ctx.assign(outlinesRef, outlinesDict);
+  doc.catalog.set(PDFName.of('Outlines'), outlinesRef);
 }
 
 export const defaultPdfEngine: PdfEngine = {

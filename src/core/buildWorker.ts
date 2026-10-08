@@ -1,6 +1,8 @@
 import { PDFDocument } from 'pdf-lib';
 import type { LayoutResult, PageNumberStampConfig, Project } from './types';
 import {
+  addOutline,
+  buildProjectOutlines,
   defaultStampConfig,
   drawComponentCover,
   drawTocPages,
@@ -167,7 +169,14 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
       reportProgress(`Applying continuous page numbers (1 of ${mergedDoc.getPageCount()})...`);
       await stampPageNumbers(mergedDoc, stampConfig);
 
-      // 5. Save final merged document
+      // 5. Bookmarks & Outline Tree
+      reportProgress('Generating nested PDF bookmarks and outline tree...');
+      const outlineItems = buildProjectOutlines(project, layout, {
+        submittalCoverPageCount: submittalCoverPdf && submittalCoverPdf.length > 0 ? 1 : 0,
+      });
+      await addOutline(mergedDoc, outlineItems);
+
+      // 6. Save final merged document
       reportProgress('Finalizing and encoding submittal PDF...');
       const outputPdfBytes = await mergedDoc.save();
 
