@@ -5,12 +5,27 @@ import { ProjectSchema } from './core/types';
 import { Navbar } from './components/Navbar';
 import { UploadDropZone } from './components/UploadDropZone';
 import { ArrangeScreen } from './components/ArrangeScreen';
+import { BuildProgressModal, type BuildStatus } from './components/BuildProgressModal';
+import type { WorkerOutMessage } from './core/buildWorker';
+import { defaultStampConfig } from './core/pdfEngine';
 import { FolderDown, ShieldAlert, Sparkles, BookOpen } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [state, dispatch] = useReducer(projectReducer, initialProjectState);
   const [isUploadDrawerOpen, setIsUploadDrawerOpen] = useState(false);
   const projectFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Web Worker Build States
+  const [buildStatus, setBuildStatus] = useState<BuildStatus>('idle');
+  const [buildProgress, setBuildProgress] = useState<{ current: number; total: number; message: string }>({
+    current: 0,
+    total: 1,
+    message: '',
+  });
+  const [buildErrorMessage, setBuildErrorMessage] = useState<string | undefined>();
+  const [buildResultBlobUrl, setBuildResultBlobUrl] = useState<string | undefined>();
+  const [buildPdfSizeBytes, setBuildPdfSizeBytes] = useState<number>(0);
+  const buildWorkerRef = useRef<Worker | null>(null);
 
   // Compute live page counts mapping from metadataMap
   const pageCounts = useMemo(() => {
@@ -58,6 +73,16 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [canUndo, canRedo]);
 
+  // Cleanup worker and object URLs on unmount
+  useEffect(() => {
+    return () => {
+      buildWorkerRef.current?.terminate();
+      if (buildResultBlobUrl) {
+        URL.revokeObjectURL(buildResultBlobUrl);
+      }
+    };
+  }, [buildResultBlobUrl]);
+
   // Export project structure as JSON file
   const handleExportProject = () => {
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(state.project, null, 2));
@@ -94,7 +119,7 @@ export const App: React.FC = () => {
           type: 'ADD_WARNINGS',
           payload: {
             warnings: [
-              'Project structure loaded! Please re-select the original files/folders if you need to generate a new PDF or render thumbnails.',
+              'Project structure loaded! Please re-select the original files/folders to generate your PDF.',
             ],
           },
         });
@@ -115,6 +140,101 @@ export const App: React.FC = () => {
         },
       });
     }
+  };
+
+  // Launch Web Worker PDF Build
+  const handleStartBuild = () => {
+    if (state.project.components.length === 0) return;
+
+    if (buildResultBlobUrl) {
+      URL.revokeObjectURL(buildResultBlobUrl);
+      setBuildResultBlobUrl(undefined);
+    }
+
+    setBuildErrorMessage(undefined);
+    setBuildStatus('building');
+    setBuildProgress({
+      current: 0,
+      total: layout.totalPages,
+      message: 'Initializing background PDF engine...',
+    });
+
+    const worker = new Worker(new URL('./core/buildWorker.ts', import.meta.url), {
+      type: 'module',
+    });
+    buildWorkerRef.current = worker;
+
+    worker.onmessage = async (e: MessageEvent<WorkerOutMessage>) => {
+      const data = e.data;
+
+      if (data.type === 'REQUEST_FILE') {
+        const file = state.fileMap[data.fixtureId];
+        if (!file) {
+          worker.postMessage({
+            type: 'FILE_ERROR',
+            fixtureId: data.fixtureId,
+            error: `Missing file on disk for "${data.path}". Please re-upload or relink this file.`,
+          });
+          return;
+        }
+
+        try {
+          const buffer = await file.arrayBuffer();
+          worker.postMessage(
+            {
+              type: 'FILE_DATA',
+              fixtureId: data.fixtureId,
+              buffer,
+            },
+            [buffer]
+          );
+        } catch (readErr: any) {
+          worker.postMessage({
+            type: 'FILE_ERROR',
+            fixtureId: data.fixtureId,
+            error: readErr?.message || 'Failed to read file from disk',
+          });
+        }
+      } else if (data.type === 'PROGRESS') {
+        setBuildProgress({
+          current: data.current,
+          total: data.total,
+          message: data.message,
+        });
+      } else if (data.type === 'SUCCESS') {
+        const blob = new Blob([data.pdfBytes as BlobPart], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        setBuildResultBlobUrl(url);
+        setBuildPdfSizeBytes(blob.size);
+        setBuildStatus('success');
+      } else if (data.type === 'ERROR') {
+        setBuildErrorMessage(data.error);
+        setBuildStatus('error');
+      }
+    };
+
+    worker.onerror = (err) => {
+      console.error('Worker error:', err);
+      setBuildErrorMessage(err.message || 'Worker thread encountered an unexpected error');
+      setBuildStatus('error');
+    };
+
+    worker.postMessage({
+      type: 'START_BUILD',
+      project: state.project,
+      layout,
+      stampConfig: defaultStampConfig,
+    });
+  };
+
+  const handleCancelBuild = () => {
+    buildWorkerRef.current?.terminate();
+    buildWorkerRef.current = null;
+    setBuildStatus('idle');
+  };
+
+  const handleCloseBuildModal = () => {
+    setBuildStatus('idle');
   };
 
   const hasComponents = state.project.components.length > 0;
@@ -142,9 +262,7 @@ export const App: React.FC = () => {
         onExport={handleExportProject}
         onImport={() => projectFileInputRef.current?.click()}
         onClear={handleClearWorkspace}
-        onBuild={() => {
-          alert('Milestone 2 complete! PDF Generation will be implemented in Milestone 3.');
-        }}
+        onBuild={handleStartBuild}
         isUploadOpen={isUploadDrawerOpen}
       />
 
@@ -227,12 +345,25 @@ export const App: React.FC = () => {
               dispatch={dispatch}
               layout={layout}
               onOpenUpload={() => setIsUploadDrawerOpen(true)}
-              onStartBuild={() => {}}
+              onStartBuild={handleStartBuild}
               onExportProject={handleExportProject}
             />
           </>
         )}
       </main>
+
+      {/* Build Progress & Result Modal */}
+      <BuildProgressModal
+        isOpen={buildStatus !== 'idle'}
+        status={buildStatus}
+        progress={buildProgress}
+        errorMessage={buildErrorMessage}
+        resultBlobUrl={buildResultBlobUrl}
+        pdfSizeBytes={buildPdfSizeBytes}
+        totalPages={layout.totalPages}
+        onCancel={handleCancelBuild}
+        onClose={handleCloseBuildModal}
+      />
     </div>
   );
 };
