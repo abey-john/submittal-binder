@@ -26,3 +26,5 @@ dist-ssr
 # misc
 notes/
 test_pdfs/
+test-results/
+playwright-report/
