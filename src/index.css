@@ -98,12 +98,12 @@ body {
   align-items: center;
   justify-content: center;
   box-shadow: 0 2px 10px rgba(249, 115, 22, 0.35);
+  color: #ffffff;
 }
 
-.brand-logo-mark {
-  font-weight: 800;
-  font-size: 18px;
+.brand-logo-icon {
   color: #ffffff;
+  display: block;
 }
 
 .brand-title {

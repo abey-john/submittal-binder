@@ -57,7 +57,7 @@ export const Navbar: React.FC<Props> = ({
         {/* Brand */}
         <div className="brand-group">
           <div className="brand-icon-box">
-            <span className="brand-logo-mark">B</span>
+            <Hammer size={18} className="brand-logo-icon" />
           </div>
           <div>
             <h1 className="brand-title">Binder</h1>
