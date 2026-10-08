@@ -5,7 +5,7 @@ import {
   Redo2,
   FileDown,
   Upload,
-  Sparkles,
+  Hammer,
   RotateCcw,
   AlertCircle,
 } from 'lucide-react';
@@ -162,7 +162,7 @@ export const Navbar: React.FC<Props> = ({
             disabled={componentCount === 0}
             id="btn-generate-submittal"
           >
-            <Sparkles size={16} />
+            <Hammer size={16} />
             <span>Build Submittal</span>
           </button>
         </div>

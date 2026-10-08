@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { extractFilesFromDataTransfer, parseUploadedFiles } from '../utils/fileHelpers';
 import { extractPdfMetadata, type PdfMetadata } from '../utils/pdfMeta';
 import type { Component } from '../core/types';
-import { FolderUp, FileUp, UploadCloud, Loader2, ShieldCheck } from 'lucide-react';
+import { FolderUp, FileUp, UploadCloud, Loader2 } from 'lucide-react';
 
 interface Props {
   onFilesParsed: (
@@ -178,10 +178,6 @@ export const UploadDropZone: React.FC<Props> = ({ onFilesParsed, compact = false
 
           {!compact && (
             <div className="dropzone-footnote">
-              <div className="privacy-pill">
-                <ShieldCheck size={14} />
-                <span>100% Client-Side • Files never leave your browser</span>
-              </div>
               <p className="dropzone-rule-tip">
                 Bulk upload: Select or drop your top-level <code>Submittal</code> folder to automatically create Components for all folders and loose PDFs.
               </p>
