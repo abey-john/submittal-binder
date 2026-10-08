@@ -8,6 +8,7 @@ import {
   Sparkles,
   ShieldCheck,
   RotateCcw,
+  AlertCircle,
 } from 'lucide-react';
 import type { LayoutResult } from '../core/types';
 import type { ProjectState } from '../state/projectReducer';
@@ -24,7 +25,9 @@ interface Props {
   onImport: () => void;
   onClear: () => void;
   onBuild: () => void;
+  onOpenRelink: () => void;
   isUploadOpen: boolean;
+  missingCount: number;
 }
 
 export const Navbar: React.FC<Props> = ({
@@ -39,7 +42,9 @@ export const Navbar: React.FC<Props> = ({
   onImport,
   onClear,
   onBuild,
+  onOpenRelink,
   isUploadOpen,
+  missingCount,
 }) => {
   const componentCount = state.project.components.length;
   const fixtureCount = state.project.components.reduce(
@@ -103,6 +108,20 @@ export const Navbar: React.FC<Props> = ({
             <FolderPlus size={15} />
             <span>{isUploadOpen ? 'Hide Upload' : 'Add Files'}</span>
           </button>
+
+          {/* Relink Missing Files Alert Button */}
+          {missingCount > 0 && componentCount > 0 && (
+            <button
+              type="button"
+              className="btn-header btn-header-warning"
+              onClick={onOpenRelink}
+              title={`${missingCount} files need to be linked before building`}
+              id="btn-relink-missing"
+            >
+              <AlertCircle size={15} />
+              <span>{missingCount} Missing Files</span>
+            </button>
+          )}
 
           {/* Project File Import/Export */}
           <div className="project-file-buttons">

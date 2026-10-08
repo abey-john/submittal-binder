@@ -6,6 +6,7 @@ import { Navbar } from './components/Navbar';
 import { UploadDropZone } from './components/UploadDropZone';
 import { ArrangeScreen } from './components/ArrangeScreen';
 import { BuildProgressModal, type BuildStatus } from './components/BuildProgressModal';
+import { ProjectRelinkModal } from './components/ProjectRelinkModal';
 import type { WorkerOutMessage } from './core/buildWorker';
 import { defaultStampConfig } from './core/pdfEngine';
 import { FolderDown, ShieldAlert, Sparkles, BookOpen } from 'lucide-react';
@@ -25,6 +26,7 @@ export const App: React.FC = () => {
   const [buildErrorMessage, setBuildErrorMessage] = useState<string | undefined>();
   const [buildResultBlobUrl, setBuildResultBlobUrl] = useState<string | undefined>();
   const [buildPdfSizeBytes, setBuildPdfSizeBytes] = useState<number>(0);
+  const [isRelinkModalOpen, setIsRelinkModalOpen] = useState(false);
   const buildWorkerRef = useRef<Worker | null>(null);
 
   // Compute live page counts mapping from metadataMap
@@ -35,6 +37,13 @@ export const App: React.FC = () => {
     });
     return counts;
   }, [state.metadataMap]);
+
+  // Compute count of missing fixture files
+  const missingCount = useMemo(() => {
+    return state.project.components.reduce((acc, c) => {
+      return acc + c.fixtures.filter((f) => !state.fileMap[f.id]).length;
+    }, 0);
+  }, [state.project, state.fileMap]);
 
   // Pure framework-free layout calculation
   // "Everything renumbers automatically when the arrangement changes. No numbers are ever typed or stored; all are derived from order."
@@ -115,20 +124,30 @@ export const App: React.FC = () => {
             project: parsed.data,
           },
         });
-        dispatch({
-          type: 'ADD_WARNINGS',
-          payload: {
-            warnings: [
-              'Project structure loaded! Please re-select the original files/folders to generate your PDF.',
-            ],
-          },
-        });
+
+        const hasFixtures = parsed.data.components.some((c) => c.fixtures.length > 0);
+        if (hasFixtures) {
+          setIsRelinkModalOpen(true);
+        }
       } catch (err: any) {
         alert('Could not read project JSON file: ' + err.message);
       }
     };
     reader.readAsText(file);
     e.target.value = '';
+  };
+
+  const handleApplyRelink = (
+    matchedFileMap: Record<string, File>,
+    newMetadataMap: Record<string, any>
+  ) => {
+    dispatch({
+      type: 'REGISTER_FILES',
+      payload: {
+        fileMap: matchedFileMap,
+        metadataMap: newMetadataMap,
+      },
+    });
   };
 
   const handleClearWorkspace = () => {
@@ -263,7 +282,9 @@ export const App: React.FC = () => {
         onImport={() => projectFileInputRef.current?.click()}
         onClear={handleClearWorkspace}
         onBuild={handleStartBuild}
+        onOpenRelink={() => setIsRelinkModalOpen(true)}
         isUploadOpen={isUploadDrawerOpen}
+        missingCount={missingCount}
       />
 
       <main className="main-workspace">
@@ -363,6 +384,15 @@ export const App: React.FC = () => {
         totalPages={layout.totalPages}
         onCancel={handleCancelBuild}
         onClose={handleCloseBuildModal}
+      />
+
+      {/* Project Relink Modal */}
+      <ProjectRelinkModal
+        isOpen={isRelinkModalOpen}
+        project={state.project}
+        existingFileMap={state.fileMap}
+        onApplyRelink={handleApplyRelink}
+        onClose={() => setIsRelinkModalOpen(false)}
       />
     </div>
   );
