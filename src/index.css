@@ -628,9 +628,9 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(245, 158, 11, 0.14);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: rgba(249, 87, 56, 0.15);
+  color: #ff643d;
+  border: 1px solid rgba(249, 87, 56, 0.35);
   font-size: 12px;
   font-weight: 700;
   padding: 4px 10px;
@@ -659,7 +659,7 @@ button {
 }
 
 .component-folder-icon {
-  color: #f59e0b;
+  color: #ff643d;
 }
 
 .component-name-text {
