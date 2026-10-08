@@ -2,7 +2,7 @@
 
 > **Assemble professional submittal packages in your browser. Your files never leave your computer.**
 
-Binder is a client-side web application for assembling construction and engineering submittal packages from multiple PDFs. It automatically generates component covers, formats a multi-page table of contents, stamps continuous page numbers, and constructs hierarchical PDF bookmarks.
+Binder is a client-side web application for assembling construction and engineering submittal packages from multiple PDFs. It automatically generates component covers, formats a multi-page table of contents, and constructs hierarchical PDF bookmarks.
 
 ---
 
@@ -10,7 +10,7 @@ Binder is a client-side web application for assembling construction and engineer
 
 **Your files never leave your computer.**
 
-- **100% Client-Side**: Binder runs entirely in your web browser. All PDF parsing, thumbnail rendering, merging, and stamping take place locally on your device.
+- **100% Client-Side**: Binder runs entirely in your web browser. All PDF parsing, thumbnail rendering, and merging take place locally on your device.
 - **No Cloud Uploads**: There is no backend server, no cloud storage, and no database.
 - **Zero Telemetry**: No analytics, tracking scripts, or external network requests are made with your documents or data.
 
@@ -29,18 +29,15 @@ Binder is a client-side web application for assembling construction and engineer
 4. **Automated Table of Contents (TOC)**:
    - Formatted table with columns `#`, `Component Name`, `Submitted in this Package`, `Where Previously Approved`, and reviewer `Status Code`.
    - Real vector table borders, wrapped cell text, and repeated headers across multi-page TOCs.
-5. **Continuous Page Numbers**:
-   - Stamps `Page {page} of {total}` at the visual bottom-center of every page.
-   - Automatically handles mixed page sizes (Letter, Tabloid 11×17, Arch), non-default `CropBox` coordinates, and rotated landscape pages (`/Rotate` of 0°, 90°, 180°, and 270°).
-6. **Hierarchical Bookmarks (PDF Outlines)**:
+5. **Hierarchical Bookmarks (PDF Outlines)**:
    - Builds native PDF outline trees from low-level objects (`Component` -> `Fixture` with `.pdf` extension stripped).
-7. **Web Worker Performance**:
+6. **Web Worker Performance**:
    - Merging runs off the main thread with an honest progress bar and cancellation support.
    - Processes source PDFs one file at a time to minimize browser heap memory.
-8. **Project File Persistence (`.json`)**:
+7. **Project File Persistence (`.json`)**:
    - Save your submittal structure to a lightweight JSON file validated with Zod.
    - Reopen anytime with automatic path matching and a "Missing Files" reconciliation dialog.
-9. **Full Undo/Redo**:
+8. **Full Undo/Redo**:
    - Reducer-backed history stack with keyboard shortcuts (`Ctrl+Z`, `Ctrl+Y`).
 
 ---
@@ -60,7 +57,7 @@ Binder is a client-side web application for assembling construction and engineer
 
 ### 3. Build & Download
 - Click **Build Submittal** in the header.
-- Watch the progress bar as Binder generates covers, formats the TOC, merges source files, applies continuous page numbers, and writes bookmarks.
+- Watch the progress bar as Binder generates covers, formats the TOC, merges source files, and writes bookmarks.
 - Click **Download Submittal PDF** to save your final package.
 
 ### 4. Save & Reopen

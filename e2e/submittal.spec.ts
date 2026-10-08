@@ -11,8 +11,8 @@ test('End-to-End: Upload PDFs, rearrange, generate package, and download', async
   await expect(uploadDropzone).toBeVisible();
 
   // 2. Upload test PDFs
-  const file1Path = path.resolve('test_pdfs/file1.pdf');
-  const file2Path = path.resolve('test_pdfs/file2.pdf');
+  const file1Path = path.resolve('test_pdfs/Dummy PDF.pdf');
+  const file2Path = path.resolve('test_pdfs/Sample PDF.pdf');
 
   const fileInput = page.locator('input[accept=".pdf"]');
   await fileInput.setInputFiles([file1Path, file2Path]);

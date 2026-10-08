@@ -8,7 +8,6 @@ import { ArrangeScreen } from './components/ArrangeScreen';
 import { BuildProgressModal, type BuildStatus } from './components/BuildProgressModal';
 import { ProjectRelinkModal } from './components/ProjectRelinkModal';
 import type { WorkerOutMessage } from './core/buildWorker';
-import { defaultStampConfig } from './core/pdfEngine';
 import { FolderDown, ShieldAlert, Sparkles, BookOpen } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -242,7 +241,6 @@ export const App: React.FC = () => {
       type: 'START_BUILD',
       project: state.project,
       layout,
-      stampConfig: defaultStampConfig,
     });
   };
 
@@ -298,7 +296,7 @@ export const App: React.FC = () => {
             <h2 className="welcome-hero-title">Assemble Professional Submittals in Seconds</h2>
             <p className="welcome-hero-desc">
               Drop your product cut sheets and drawings below. Binder automatically renumbers components,
-              formats table of contents, stamps continuous page numbers, and builds PDF bookmarks.
+              formats table of contents, and builds PDF bookmarks.
             </p>
 
             <UploadDropZone
@@ -321,7 +319,7 @@ export const App: React.FC = () => {
               <div className="hero-feature-card">
                 <BookOpen size={20} className="feature-icon" />
                 <h4>Derived Renumbering</h4>
-                <p>No numbers are ever typed or stored. Component and page numbers update automatically when you drag.</p>
+                <p>No numbers are ever typed or stored. Component numbers update automatically when you drag.</p>
               </div>
               <div className="hero-feature-card">
                 <FolderDown size={20} className="feature-icon" />

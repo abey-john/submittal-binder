@@ -65,3 +65,11 @@ This document records key decisions made where the project prompt was silent or 
   - Exported project files are lightweight JSON documents validated via Zod schemas. No page numbers or component numbers are persisted.
   - On import, Binder checks for missing `File` references and presents a dedicated reconciliation modal. Users can drop or select their folder/files, and Binder matches fixtures by normalized relative path and filename.
 * **Rationale**: Zero storage leaks, complete portability, and straightforward file recovery.
+
+---
+
+### 7. Removal of Footer Page Number Stamps ("Page X of Y")
+* **Context**: Submittal packages frequently incorporate manufacturers' cut sheets, spec sections, and engineering drawing sets that already have their own title blocks, drawing borders, or sheet pagination. Stamping "Page X of Y" across the bottom of every page can overlap title block text or conflict with existing sheet numbers.
+* **Decision**: Removed automatic footer page number stamping during document build. The Web Worker skips the stamping pass by default. The pure layout calculations and underlying `stampPageNumbers` engine remain preserved as an extension point if needed.
+* **Rationale**: Preserves original drawing margins, avoids cluttering manufacturers' cut sheets, and respects pre-existing sheet numbering.
+

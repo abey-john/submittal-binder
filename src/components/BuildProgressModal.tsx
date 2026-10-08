@@ -107,7 +107,7 @@ export const BuildProgressModal: React.FC<Props> = ({
                 </div>
               </div>
               <p className="success-desc">
-                Your submittal package contains all generated component covers, table of contents, and continuous bottom-center page numbers.
+                Your submittal package contains all generated component covers, table of contents, and hierarchical PDF bookmarks.
               </p>
             </div>
           )}

@@ -3,7 +3,6 @@ import type { LayoutResult, PageNumberStampConfig, Project } from './types';
 import {
   addOutline,
   buildProjectOutlines,
-  defaultStampConfig,
   drawComponentCover,
   drawTocPages,
   stampPageNumbers,
@@ -78,7 +77,7 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
   }
 
   if (data.type === 'START_BUILD') {
-    const { project, layout, stampConfig = defaultStampConfig, submittalCoverPdf } = data;
+    const { project, layout, stampConfig, submittalCoverPdf } = data;
     const totalSteps = Math.max(1, layout.totalPages);
     let completedPages = 0;
 
@@ -165,9 +164,11 @@ self.onmessage = async (e: MessageEvent<WorkerInMessage>) => {
         }
       }
 
-      // 4. Stamping continuous page numbers
-      reportProgress(`Applying continuous page numbers (1 of ${mergedDoc.getPageCount()})...`);
-      await stampPageNumbers(mergedDoc, stampConfig);
+      // 4. Stamping continuous page numbers (optional; skipped by default)
+      if (stampConfig) {
+        reportProgress(`Applying continuous page numbers (1 of ${mergedDoc.getPageCount()})...`);
+        await stampPageNumbers(mergedDoc, stampConfig);
+      }
 
       // 5. Bookmarks & Outline Tree
       reportProgress('Generating nested PDF bookmarks and outline tree...');
