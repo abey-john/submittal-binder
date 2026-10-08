@@ -288,10 +288,9 @@ export const App: React.FC = () => {
         {/* If no components are loaded, show welcome hero + main upload dropzone */}
         {!hasComponents ? (
           <div className="welcome-hero-container">
-            <h2 className="welcome-hero-title">Assemble Professional Submittals in Seconds</h2>
+            <h2 className="welcome-hero-title">Submittal Package Builder</h2>
             <p className="welcome-hero-desc">
-              Drop your product cut sheets and drawings below. Binder automatically renumbers components,
-              formats table of contents, and builds PDF bookmarks.
+              Drop a folder or PDF files below to arrange components and generate your submittal package.
             </p>
 
             <UploadDropZone
