@@ -3,7 +3,7 @@ import path from 'path';
 
 test('End-to-End: Upload PDFs, rearrange, generate package, and download', async ({ page }) => {
   // 1. Navigate to application
-  await page.goto('/');
+  await page.goto('/submittal-binder/');
   await expect(page).toHaveTitle(/Binder — Submittal Package Builder/);
 
   // Verify dropzone and upload actions are present
