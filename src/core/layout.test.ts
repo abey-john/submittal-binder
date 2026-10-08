@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { computeLayout, paginateToc, wrapTextToLines } from './layout';
-import { Component, Project } from './types';
+import type { Component, Project } from './types';
 
 describe('computeLayout and layout engine', () => {
   const sampleProject: Project = {

@@ -1,12 +1,12 @@
 import {
-  Component,
+  type Component,
   getComponentDisplayName,
-  LayoutOptions,
-  LayoutResult,
-  Project,
-  TocLayoutOptions,
-  TocPage,
-  TocRow,
+  type LayoutOptions,
+  type LayoutResult,
+  type Project,
+  type TocLayoutOptions,
+  type TocPage,
+  type TocRow,
 } from './types';
 
 /**
